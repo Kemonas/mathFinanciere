@@ -59,7 +59,7 @@ class math {
                             <th class="column2" >Capital restant en debut de période</th>
                             <th class="column3" >Intérêts de la période</th>
                             <th class="column4" >Amortissement du capital</th>
-                            <th class="column5" >Annuité d'emprunt</th>
+                            <th class="column5">Annuité d'emprunt</th>
                             <th class="column6" >Capital restant dû en fin de période</th>
                         </tr>
                     </thead>
@@ -72,6 +72,8 @@ HTML;
         $pr = $_GET['periode'];
 
         $i = self::getI();
+
+        $a =math::getAnnee();
         if ($r[0] == 0){
             $r[0] = 1;
         }
@@ -86,7 +88,7 @@ HTML;
             $r[1] = $r[5];
         }
         $r[2]= round($r[1]*($i),2);
-        $r[4]= round($_GET['montant']*($i/(1-(1+$i)**(-math::getAnnee()))),2);
+        $r[4]= round($_GET['montant']*($i/(1-(1+$i)**(-$a))),2);
         $r[3]= round($r[4]-$r[2],2);
         $r[5]= round($r[1]-$r[3],2);
         if ($r[5]<0.1){
@@ -100,10 +102,13 @@ HTML;
         $html = "";
         $r = [0,0,0,0,0,0];
         $pr = $_GET['periode'];
-            for ($i = 0;$i<math::getAnnee();$i++){
-                $an = $i+1;
-                $r = math::calculAnnee($r);
-                $html .= <<<HTML
+        $tI = 0;
+        $tA = 0;
+        $tAn = 0;
+        for ($i = 0;$i<math::getAnnee();$i++){
+            $an = $i+1;
+            $r = math::calculAnnee($r);
+            $html .= <<<HTML
                   <tr>
                       <td class = "column 1">$r[0]</td>
                       <td class = "column 2">$r[1]</td>
@@ -111,10 +116,28 @@ HTML;
                       <td class = "column 4">$r[3]</td>
                       <td class = "column 5">$r[4]</td>
                       <td class = "column 6">$r[5]</td>
+                      
                   </tr>
 HTML;
-            }
-            $html .= <<<HTML
+            $tI += $r[2];
+            $tA += $r[3];
+            $tAn += $r[4];
+        }
+        if ($tA !=$_GET['montant']){
+            $v = $_GET['montant'] - $tA;
+            $tA = $_GET['montant'];
+            $tAn = $tAn + $v;
+        }
+        $html .= <<<HTML
+                    <tr>
+                        <td class = "column 1">Totaux</td>
+                        <td class = "column 2"></td>
+                        <td class = "column 1">$tI</td>
+                        <td class = "column 1">$tA</td>
+                        <td class = "column 1">$tAn</td>
+                        <td class = "column 1"></td>
+                        <td class = "column 1"></td>
+                    </tr>
               </tbody>
             </table>
           </div>
@@ -131,22 +154,25 @@ HTML;
     <!--===============================================================================================-->
     	<script src="js/main.js"></script>
 HTML;
-    return $html;
+        return $html;
 
     }
 
     public static function getI(){
         $pr = $_GET['periode'];
         $i = $_GET['i']/100;
+
         if ($pr == 3){
-            $i = $i / 2;
+            $i = (1+$i)**(1/2)-1;
         }
         if ($pr == 2){
-            $i = $i / 4;
+            $i = (1+$i)**(1/4)-1;
         }
 
         if($pr == 1){
-            $i = $i / 12;
+            $i = (1+$i)**(1/12)-1;
+
+
         }
         return $i;
     }
